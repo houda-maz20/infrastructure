@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - /home/houda/dockerImages/prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+
+  node-exporter:
+    image: prom/node-exporter
+    ports:
+      - "9100:9100"
+
+  cadvisor:
+    image: google/cadvisor:latest
+    ports:
+      - "8089:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    restart: always
+
+  nginx:
+    build: .
+    ports:
+      - "8080:80"
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    ports:
+      - "9113:9113"
+    command: ["-nginx.scrape-uri", "http://nginx:80/metrics"]
+    depends_on:
+      - nginx
+
